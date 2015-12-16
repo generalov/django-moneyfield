@@ -1,12 +1,12 @@
 import logging
 import re
+from collections import OrderedDict
 from decimal import Decimal
 
 from django import forms
 from django.core.exceptions import FieldError, ValidationError
 from django.forms.models import ModelFormMetaclass
-from django.forms.util import flatatt
-from django.utils.datastructures import SortedDict
+from django.forms.utils import flatatt
 from django.utils.encoding import force_text
 from django.utils.html import format_html
 from django.db import models
@@ -40,7 +40,7 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
         # Rebuild the dict of form fields by replacing fields derived from
         # money subfields with a specialised money multivalue form field,
         # while preserving the original ordering.
-        fields = SortedDict()
+        fields = OrderedDict()
         for fieldname, field in new_class.base_fields.items():
             for moneyfield in modelopts.moneyfields:
                 if fieldname == moneyfield.amount_attr:
