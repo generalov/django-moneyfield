@@ -1,3 +1,4 @@
+import six
 import re
 from collections import OrderedDict
 
@@ -27,7 +28,7 @@ def currency_code_validator(value):
 
 class MoneyModelFormMetaclass(ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
-        new_class = super().__new__(cls, name, bases, attrs)
+        new_class = super(MoneyModelFormMetaclass, cls).__new__(cls, name, bases, attrs)
         if name == 'MoneyModelForm':
             return new_class
 
@@ -54,8 +55,8 @@ class MoneyModelFormMetaclass(ModelFormMetaclass):
         return new_class
 
 
-class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
-    def __init__(self, *args, initial={}, instance=None, **kwargs):
+class MoneyModelForm(six.with_metaclass(MoneyModelFormMetaclass, forms.ModelForm)):
+    def __init__(self, initial={}, instance=None, *args, **kwargs):
         opts = self._meta
         modelopts = opts.model._meta
         if instance:
@@ -66,7 +67,7 @@ class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
                     moneyfield.name: getattr(instance, moneyfield.name)}
                 )
 
-        super().__init__(*args, initial=initial, instance=instance, **kwargs)
+        super(MoneyModelForm, self).__init__(*args, initial=initial, instance=instance, **kwargs)
 
         # Money "subfields" cannot be excluded separately
         if opts.exclude:
@@ -79,7 +80,7 @@ class MoneyModelForm(forms.ModelForm, metaclass=MoneyModelFormMetaclass):
                         raise MoneyModelFormError(msg)
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super(MoneyModelForm, self).clean()
         # Finish the work of forms.models.construct_instance() as it doesn't
         # find match between the form multivalue field (e.g. "price"), and the
         # model's _meta.fields (e.g. "price_amount" and "price_currency").
@@ -110,14 +111,14 @@ class MoneyWidget(forms.MultiWidget):
         if name in data:
             return self.decompress(data[name])
         else:
-            return super().value_from_datadict(data, files, name)
+            return super(MoneyWidget, self).value_from_datadict(data, files, name)
 
 
 class MoneyFormField(forms.MultiValueField):
     def __init__(self, fields=(), *args, **kwargs):
         if not kwargs.setdefault('initial'):
             kwargs['initial'] = [f.initial for f in fields]
-        super().__init__(*args, fields=fields, **kwargs)
+        super(MoneyFormField, self).__init__(*args, fields=fields, **kwargs)
 
     def compress(self, data_list):
         return Money(data_list[0], data_list[1])
@@ -126,12 +127,12 @@ class MoneyFormField(forms.MultiValueField):
 class FixedCurrencyWidget(forms.Widget):
     def __init__(self, attrs=None, currency=None):
         assert currency
-        super().__init__(attrs=attrs)
+        super(FixedCurrencyWidget, self).__init__(attrs=attrs)
         self.currency = currency
 
     def value_from_datadict(self, data, files, name):
         # Defaults to fixed currency
-        value = super().value_from_datadict(data, files, name)
+        value = super(FixedCurrencyWidget, self).value_from_datadict(data, files, name)
         return value or self.currency
 
     def render(self, name, value, attrs=None):
@@ -150,7 +151,7 @@ class FixedCurrencyFormField(forms.Field):
         assert currency
         self.currency = currency
         self.widget = FixedCurrencyWidget(currency=currency)
-        super().__init__(*args, **kwargs)
+        super(FixedCurrencyFormField, self).__init__(*args, **kwargs)
 
     def validate(self, value):
         if not value is self.currency:
@@ -228,7 +229,7 @@ class MoneyField(models.Field):
                  currency_default=NOT_PROVIDED,
                  default=NOT_PROVIDED, amount_default=NOT_PROVIDED, **kwargs):
 
-        super().__init__(verbose_name, name, default=default, **kwargs)
+        super(MoneyField, self).__init__(verbose_name, name, default=default, **kwargs)
         self.fixed_currency = currency
 
         # DecimalField pre-validation
@@ -336,4 +337,4 @@ class MoneyField(models.Field):
         }
         config.update(kwargs)
 
-        return super().formfield(form_class=MoneyFormField, **config)
+        return super(MoneyField, self).formfield(form_class=MoneyFormField, **config)
