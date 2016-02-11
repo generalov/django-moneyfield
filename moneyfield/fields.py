@@ -6,7 +6,10 @@ from django.core.exceptions import FieldError, ValidationError
 from django.db import models
 from django.db.models import NOT_PROVIDED
 from django.forms.models import ModelFormMetaclass
-from django.forms.utils import flatatt
+try:
+    from django.forms.utils import flatatt
+except ImportError:
+    from django.forms.util import flatatt  # django < 1.7
 from django.utils.encoding import force_text
 from django.utils.html import format_html
 from money import Money

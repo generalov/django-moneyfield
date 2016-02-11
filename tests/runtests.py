@@ -19,6 +19,7 @@ if not settings.configured:
                 'NAME': ':memory:'
             }
         },
+        MIDDLEWARE_CLASSES = [],
         TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner' if django.VERSION < (1,6) else 'django.test.runner.DiscoverRunner',
         USE_L10N = True,
         SECRET_KEY = "justthetestapp",
