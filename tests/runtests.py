@@ -1,21 +1,41 @@
 #!/usr/bin/env python
-import os
 import sys
+from os import path
 
-from django.conf import settings
-from django.core import management
+import django
+from django.conf import settings, global_settings
+from django.core.management import execute_from_command_line
 
+
+if not settings.configured:
+    module_root = path.dirname(path.realpath(__file__))
+
+    settings.configure(
+        DEBUG = False,
+        TEMPLATE_DEBUG = True,
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': ':memory:'
+            }
+        },
+        TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner' if django.VERSION < (1,6) else 'django.test.runner.DiscoverRunner',
+        USE_L10N = True,
+        SECRET_KEY = "justthetestapp",
+        INSTALLED_APPS = (
+            'testapp',
+        ),
+
+        MONEY_CURRENCY_CHOICES = (
+            ('AAA', 'AAA'),
+            ('BBB', 'BBB'),
+            ('CCC', 'CCC'),
+        )
+    )
 
 def runtests():
-    pkg_path = os.path.normpath(
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir)
-    )
-    if pkg_path not in sys.path:
-        sys.path.insert(0, pkg_path)
-    
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings')
-    management.call_command('test', 'testapp')
-
+    argv = sys.argv[:1] + ['test', 'testapp'] + sys.argv[1:]
+    execute_from_command_line(argv)
 
 if __name__ == '__main__':
     runtests()
