@@ -27,8 +27,8 @@ def currency_code_validator(value):
 
 
 class MoneyModelFormMetaclass(ModelFormMetaclass):
-    def __new__(cls, name, bases, attrs):
-        new_class = super(MoneyModelFormMetaclass, cls).__new__(cls, name, bases, attrs)
+    def __new__(mcs, name, bases, attrs):
+        new_class = super(MoneyModelFormMetaclass, mcs).__new__(mcs, name, bases, attrs)
         if name == 'MoneyModelForm':
             return new_class
 
